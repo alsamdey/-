@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام طلبات المواد الغذائية</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 15px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #e62e04, #ff5e14);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            margin: 15px;
+            font-size: 16px;
+        }
+        
+        .categories {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+        
+        .category-btn {
+            padding: 8px 15px;
+            background: white;
+            border-radius: 20px;
+            margin: 0 5px;
+            white-space: nowrap;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        
+        .category-btn.active {
+            background: #e62e04;
+            color: white;
+            border-color: #e62e04;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 10px;
+            margin-bottom: 120px;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .product-img {
+            width: 100%;
+            height: 100px;
+            object-fit: contain;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .product-name {
+            font-weight: bold;
+            margin: 5px 0;
+            font-size: 14px;
+            height: 40px;
+            overflow: hidden;
+        }
+        
+        .product-price {
+            color: #e62e04;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 5px;
+        }
+        
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            background: white;
+            font-weight: bold;
+        }
+        
+        .quantity-input {
+            width: 40px;
+            text-align: center;
+            margin: 0 5px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .cart-section {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 15px 15px 0 0;
+            padding: 15px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .cart-items {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .checkout-btn {
+            background: linear-gradient(135deg, #e62e04, #ff5e14);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 25px;
+            width: 100%;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .empty-cart {
+            text-align: center;
+            color: #666;
+            padding: 10px;
+        }
+        
+        @media (min-width: 768px) {
+            .products-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>نظام طلبات المواد الغذائية</h1>
+            <p>إدارة طلبات الجملة بأحدث التقنيات</p>
+        </div>
+        
+        <input type="text" class="search-box" placeholder="🔍 ابحث عن منتج..." id="searchInput">
+        
+        <div class="categories">
+            <button class="category-btn active" onclick="filterProducts('الكل')">الكل</button>
+            <button class="category-btn" onclick="filterProducts('معلبات')">معلبات</button>
+            <button class="category-btn" onclick="filterProducts('مشروبات')">مشروبات</button>
+            <button class="category-btn" onclick="filterProducts('حلويات')">حلويات</button>
+            <button class="category-btn" onclick="filterProducts('مواد تنظيف')">تنظيف</button>
+            <button class="category-btn" onclick="filterProducts('ألبان')">ألبان</button>
+        </div>
+        
+        <div class="products-grid" id="products-container">
+            <!-- المنتجات تُضاف هنا بالجافاسكريبت -->
+        </div>
+    </div>
+    
+    <div class="cart-section">
+        <div class="cart-header">
+            <h3>سلة الطلبات</h3>
+            <span id="cart-count">0 منتج</span>
+        </div>
+        
+        <div class="cart-items" id="cart-items">
+            <div class="empty-cart">السلة فارغة</div>
+        </div>
+        
+        <div class="cart-total">
+            <span>المجموع:</span>
+            <span id="cart-total">0.00 ريال</span>
+        </div>
+        
+        <button class="checkout-btn" onclick="checkout()">📦 تأكيد الطلب</button>
+    </div>
+
+    <script>
+        // بيانات المنتجات
+        const products = [
+            { id: 1, name: "أرز بسمتي هندي", category: "معلبات", price: 35, unit: "كيس 5 كغ", image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj7Yp9mE2YLYp9mE2KrYr9in2YQ8L3RleHQ+PC9zdmc+" },
+            { id: 2, name: "زيت زيتون بكر", category: "معلبات", price: 45, unit: "زجاجة 1 لتر", image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj7Zh9in2K3ZitipINin2K3YrdmK2Kk8L3RleHQ+PC9zdmc+" },
+            { id: 3, name: "مشروبات غازية", category: "مشروبات", price: 15, unit: "علبة 330 مل", image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj7Yt9in2LPYqtiv2KfZhCDZhdin2YbZhtivPC90ZXh0Pjwvc3ZnPg==" },
+            { id: 4, name: "عصير برتقال طبيعي", category: "مشروبات", price: 20, unit: "كرتون 1 لتر", image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj7Yp9mE2YrYrdivINin2YTYqtiv2YbYr9mG2K8g2KfZhNmK2K/Ys9iq2KfZhtivPC90ZXh0Pjwvc3ZnPg==" },
+            { id: 5, name: "شوكولاته بالبندق", category: "حلويات", price: 10, unit: "لوح 100 غ", image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj7Yt9in2LPYqtiv2KfZhCDYp9mE2YrYrdivINin2YTYqtiv2YbYr9mG2K8g2KfZhNmK2K/Ys9iq2KfZhtivPC90ZXh0Pjwvc3ZnPg==" },
+            { id: 6, name: "بسكويت شوكولاته", category: "حلويات", price: 8, unit: "علبة 200 غ", image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj7Yp9mE2YrYrdivINin2YTYqtiv2YbYr9mG2K8g2KfZhNmK2K/Ys9iq2KfZhtivPC90ZXh0Pjwvc3ZnPg==" },
+            { id: 7, name: "منظف أرضيات", category: "مواد تنظيف", price: 18, unit: "عبوة 2 لتر", image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj7Yt9in2LPYqtiv2KfZhCDYp9mE2YrYrdivINin2YTYqtiv2YbYr9mG2K8g2KfZhNmK2K/Ys9iq2KfZhtivPC90ZXh0Pjwvc3ZnPg==" },
+            { id: 8, name: "جبنة شيدر", category: "ألبان", price: 25, unit: "قطعة 1 كغ", image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMzMzIj7Yp9mE2YrYrdivINin2YTYqtiv2YbYr9mG2K8g2KfZhNmK2K/Ys9iq2KfZhtivPC90ZXh0Pjwvc3ZnPg==" }
+        ];
+
+        let cart = [];
+        let currentCategory = 'الكل';
+
+        // تهيئة الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            renderProducts();
+            setupEventListeners();
+            loadCartFromStorage();
+        });
+
+        // إعداد مستمعي الأحداث
+        function setupEventListeners() {
+            // البحث أثناء الكتابة
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                filterProducts(currentCategory, e.target.value);
+            });
+        }
+
+        // عرض المنتجات
+        function renderProducts() {
+            const container = document.getElementById('products-container');
+            container.innerHTML = '';
+            
+            products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product-card';
+                productElement.innerHTML = `
+                    <img src="${product.image}" class="product-img" alt="${product.name}">
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-price">${product.price} ريال</div>
+                    <div style="font-size: 12px; color: #666;">${product.unit}</div>
+                    <div class="quantity-controls">
+                        <button class="quantity-btn" onclick="changeQuantity(${product.id}, -1)">-</button>
+                        <input type="number" class="quantity-input" id="qty-${product.id}" value="0" min="0">
+                        <button class="quantity-btn" onclick="changeQuantity(${product.id}, 1)">+</button>
+                    </div>
+                    <button style="margin-top: 8px; padding: 8px; width: 100%; background: #28a745; color: white; border: none; border-radius: 5px;" 
+                            onclick="addToCart(${product.id})">أضف للسلة</button>
+                `;
+                container.appendChild(productElement);
+            });
+        }
+
+        // تصفية المنتجات
+        function filterProducts(category, searchText = '') {
+            currentCategory = category;
+            
+            // تحديث أزرار التصنيف
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            const container = document.getElementById('products-container');
+            container.innerHTML = '';
+            
+            const filteredProducts = products.filter(product => {
+                const matchesCategory = category === 'الكل' || product.category === category;
+                const matchesSearch = product.name.includes(searchText) || 
+                                    product.category.includes(searchText);
+                return matchesCategory && matchesSearch;
+            });
+            
+            if (filteredProducts.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px;">لا توجد منتجات تطابق البحث</div>';
+                return;
+            }
+            
+            filteredProducts.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product-card';
+                productElement.innerHTML = `
+                    <img src="${product.image}" class="product-img" alt="${product.name}">
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-price">${product.price} ريال</div>
+                    <div style="font-size: 12px; color: #666;">${product.unit}</div>
+                    <div class="quantity-controls">
+                        <button class="quantity-btn" onclick="changeQuantity(${product.id}, -1)">-</button>
+                        <input type="number" class="quantity-input" id="qty-${product.id}" value="0" min="0">
+                        <button class="quantity-btn" onclick="changeQuantity(${product.id}, 1)">+</button>
+                    </div>
+                    <button style="margin-top: 8px; padding: 8px; width: 100%; background: #28a745; color: white; border: none; border-radius: 5px;" 
+                            onclick="addToCart(${product.id})">أضف للسلة</button>
+                `;
+                container.appendChild(productElement);
+            });
+        }
+
+        // تغيير الكمية
+        function changeQuantity(productId, delta) {
+            const input = document.getElementById(`qty-${productId}`);
+            let newValue = parseInt(input.value) + delta;
+            if (newValue < 0) newValue = 0;
+            input.value = newValue;
+        }
+
+        // إضافة إلى السلة
+        function addToCart(productId) {
+            const quantity = parseInt(document.getElementById(`qty-${productId}`).value);
+            if (quantity <= 0) {
+                alert('الكمية يجب أن تكون أكبر من الصفر');
+                return;
+            }
+            
+            const product = products.find(p => p.id === productId);
+            const existingItem = cart.find(item => item.productId === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({
+                    productId: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: quantity,
+                    unit: product.unit
+                });
+            }
+            
+            document.getElementById(`qty-${productId}`).value = 0;
+            updateCart();
+            alert('تمت إضافة المنتج إلى السلة');
+        }
+
+        // تحديث السلة
+        function updateCart() {
+            const cartItems = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+            const cartCount = document.getElementById('cart-count');
+            
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<div class="empty-cart">السلة فارغة</div>';
+                cartTotal.textContent = '0.00 ريال';
+                cartCount.textContent = '0 منتج';
+                return;
+            }
+            
+            let itemsHtml = '';
+            let total = 0;
+            let count = 0;
+            
+            cart.forEach((item, index) => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                count += item.quantity;
+                
+                itemsHtml += `
+                    <div class="cart-item">
+                        <div>${item.name} (${item.quantity})</div>
+                        <div>${itemTotal} ريال</div>
+                        <button style="border: none; background: none; color: #e62e04; cursor: pointer;" 
+                                onclick="removeFromCart(${index})">✕</button>
+                    </div>
+                `;
+            });
+            
+            cartItems.innerHTML = itemsHtml;
+            cartTotal.textContent = total.toFixed(2) + ' ريال';
+            cartCount.textContent = count + ' منتج';
+            
+            // حفظ السلة في التخزين المحلي
+            saveCartToStorage();
+        }
+
+        // إزالة من السلة
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCart();
+        }
+
+        // تأكيد الطلب
+        function checkout() {
+            if (cart.length === 0) {
+                alert('السلة فارغة. يرجى إضافة منتجات أولاً');
+                return;
+            }
+            
+            const orderNumber = Math.floor(100000 + Math.random() * 900000);
+            const total = document.getElementById('cart-total').textContent;
+            
+            alert(`تم تأكيد الطلب بنجاح!\nرقم الطلب: ${orderNumber}\nالإجمالي: ${total}\nسيتم تجهيز الطلب خلال 24 ساعة`);
+            
+            // إعادة تعيين السلة
+            cart = [];
+            updateCart();
+            localStorage.removeItem('savedCart');
+        }
+
+        // حفظ السلة في التخزين المحلي
+        function saveCartToStorage() {
+            localStorage.setItem('savedCart', JSON.stringify(cart));
+        }
+
+        // تحميل السلة من التخزين المحلي
+        function loadCartFromStorage() {
+            const savedCart = localStorage.getItem('savedCart');
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+                updateCart();
+            }
+        }
+    </script>
+</body>
+</html>
